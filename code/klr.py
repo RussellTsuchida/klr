@@ -82,7 +82,7 @@ class Klr(object):
         return 1/(1+np.exp(-score))#, ker@self.a > 0
 
     def predict(self, x_pred, prob_decision_boundary=0.5):
-        probs = self.predict_proba(x_pred)
+        probs = self.predict_proba(x_pred).reshape(-1,)
         y_pred = [1 if prob >= prob_decision_boundary else 0 for prob in probs]
         return np.array(y_pred)
 
