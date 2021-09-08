@@ -61,7 +61,7 @@ class Klr(object):
         # Loop
         for _ in range(num_iters):
             a_old = self.a.copy()
-            self._step(x, y, lamb)
+            self._step(y, lamb)
             print(np.linalg.norm(self.a-a_old))
         
         # return self.a
