@@ -1,5 +1,5 @@
 import numpy as np
-from ..klr import Klr
+from klr.klr import Klr
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt

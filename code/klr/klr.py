@@ -1,5 +1,6 @@
 import numpy as np
-from helpers import SquaredExponential
+from klr.helpers import SquaredExponential
+from klr.response_funcs import invlogit
 
 class Klr(object):
     """klr implementation based on 
@@ -55,7 +56,7 @@ class Klr(object):
             assert x.shape[0] == x.shape[1], "precomputed_kernel requires a squared matrix"
         self.x = x.copy()
         self.a = np.zeros((x.shape[0], 1))
-        self.K = self.kernel(x, x) if self.precomputed_kernel else self.x
+        self.K = self.kernel_func(x, x) if not self.precomputed_kernel else self.x
 
         # Loop
         for _ in range(num_iters):
@@ -68,7 +69,7 @@ class Klr(object):
     def decision_function(self, x_pred):
         """returns the raw scores before applying the logit function
         """
-        ker = self.kernel(x_pred, self.x) if self.precomputed_kernel else x_pred
+        ker = self.kernel_func(x_pred, self.x) if not self.precomputed_kernel else x_pred
         return ker@self.a
 
     def predict_proba(self, x_pred):
@@ -79,11 +80,11 @@ class Klr(object):
             with the training x (precomputed_kernel is True), or a raw feature vector (precomputed_kernel is False)
         """
         score = self.decision_function(x_pred)
-        return 1/(1+np.exp(-score))#, ker@self.a > 0
+        return invlogit(score)#, ker@self.a > 0
 
     def predict(self, x_pred, prob_decision_boundary=0.5):
-        probs = self.predict_proba(x_pred).reshape(-1,)
+        probs = self.predict_proba(x_pred).flatten()
         y_pred = [1 if prob >= prob_decision_boundary else 0 for prob in probs]
-        return np.array(y_pred)
+        return np.array(y_pred).reshape(-1,1)
 
 
