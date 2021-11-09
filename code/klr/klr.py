@@ -8,7 +8,8 @@ class Klr(object):
     with similar annotation of variables
 
     Args:
-        object ([type]): [description]
+        kernel_func (func): kernel function if precomputed_kernel=False. Defaults to None.
+        precomputed_kernel (bool, optional): whether x is a pairwise kernel matrix. Defaults to True.
     """
     def __init__(self, kernel_func=None, precomputed_kernel=True):
         self.precomputed_kernel = precomputed_kernel
