@@ -7,11 +7,11 @@ from scipy.sparse import csr_matrix
 
 class Ovr():
     def __init__(self, x, y, lamb = 0.1, num_iters = 10, kernel_func=None, precomputed_kernel=True):
-        """implement one versus rest klr classification
+        """implement one versus rest klr classification, for now, predict only supporst kernel matrix as input
 
         Args:
-            kernel_func ([type], optional): [description]. Defaults to None.
-            precomputed_kernel (bool, optional): [description]. Defaults to True.
+            kernel_func (func): kernel function if precomputed_kernel=False. Defaults to None.
+            precomputed_kernel (bool, optional): whether x is a pairwise kernel matrix. Defaults to True.
         """
         # Initialise
         self.x = x.copy()
@@ -47,7 +47,7 @@ class Ovr():
     def fit(self):
         for i in range(self.ovrd_y.shape[1]):
             model = Klr(precomputed_kernel=True)
-            model.fit(self.K,self.ovrd_y[:,i], lamb=self.lamb, num_iters=self.num_iters)
+            model.fit(self.K,self.ovrd_y[:,i].reshape(-1,1), lamb=self.lamb, num_iters=self.num_iters)
             yield model
 
     def decision_function(self, x_pred):
@@ -62,9 +62,9 @@ class Ovr():
         return invlogit(scores)
 
     def predict(self, x_pred):
-        probs = self.predict_proba(self,x_pred)
+        probs = self.predict_proba(x_pred)
         best = np.argmax(probs, axis=1)
-        num_obs = self.ovrd_y.shape[0]
+        num_obs = len(x_pred)
         num_categories = self.ovrd_y.shape[1]
-        y_pred = csr_matrix((np.repeat(1,num_obs),best,np.arange(0,num_obs,num_categories)), shape=(num_obs,num_categories))
-        return self.lb.inverse_transform(y_pred)
+        y_pred = csr_matrix((np.repeat(1,num_obs),(list(range(num_obs)),best)), shape=(num_obs,num_categories))
+        return self.lb.inverse_transform(y_pred).reshape(-1,1)
