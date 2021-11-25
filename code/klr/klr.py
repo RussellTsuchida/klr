@@ -40,9 +40,13 @@ class Klr(object):
         z = self._z(y, W, p, self.Ka)
         
         KW = self.K.T@W
+        #self.a = np.linalg.solve(\
+        #        KW@self.K+lamb*np.eye(self.K.shape[0]),
+        #        KW@z)
         self.a = np.linalg.solve(\
-                KW@self.K+lamb*np.eye(self.K.shape[0]),
+                KW@self.K+lamb*self.K,
                 KW@z)
+
 
     # def _p_x(self):
     #     return 1/(1+np.exp(-self.K @ self.a)).reshape((-1,))
@@ -62,7 +66,7 @@ class Klr(object):
         for _ in range(num_iters):
             a_old = self.a.copy()
             self._step(y, lamb)
-            print(np.linalg.norm(self.a-a_old))
+            #print(np.linalg.norm(self.a-a_old))
         
         # return self.a
     
