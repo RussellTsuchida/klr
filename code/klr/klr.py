@@ -11,6 +11,8 @@ class Klr(object):
         object ([type]): [description]
     """
     def __init__(self, kernel_func=None, precomputed_kernel=True):
+        self.K = None
+        self.x = np.asarray([np.nan])
         self.precomputed_kernel = precomputed_kernel
         if not self.precomputed_kernel:
             self._init_kernel_func(kernel_func)
@@ -22,8 +24,6 @@ class Klr(object):
             kernel (func ?): kernel function
         """
         if kernel_func is None:
-            #kernel = lambda x1, x2: np.exp(\
-            #        -sp.distance.cdist(x1, x2, 'sqeuclidean')/2)
             kernel_func = SquaredExponential(1)
         self.kernel_func = kernel_func
 
@@ -40,16 +40,9 @@ class Klr(object):
         z = self._z(y, W, p, self.Ka)
         
         KW = self.K.T@W
-        #self.a = np.linalg.solve(\
-        #        KW@self.K+lamb*np.eye(self.K.shape[0]),
-        #        KW@z)
         self.a = np.linalg.solve(\
                 KW@self.K+lamb*self.K,
                 KW@z)
-
-
-    # def _p_x(self):
-    #     return 1/(1+np.exp(-self.K @ self.a)).reshape((-1,))
 
     def _z(self, y, W, p, Ka):
         return Ka + np.linalg.solve(W, y - p.reshape((-1,1)))
@@ -58,9 +51,13 @@ class Klr(object):
         # Initialise
         if self.precomputed_kernel:
             assert x.shape[0] == x.shape[1], "precomputed_kernel requires a squared matrix"
-        self.x = x.copy()
+
         self.a = np.zeros((x.shape[0], 1))
-        self.K = self.kernel_func(x, x) if not self.precomputed_kernel else self.x
+        # Sometimes we fit multiple times using the same kernel. In this case,
+        # don't keep computing the kernel every time.
+        if (self.K is None) or not (np.array_equal(x, self.x)):
+            self.x = x.copy()
+            self.K = self.kernel_func(x, x) if not self.precomputed_kernel else self.x
 
         # Loop
         for _ in range(num_iters):
@@ -68,8 +65,6 @@ class Klr(object):
             self._step(y, lamb)
             #print(np.linalg.norm(self.a-a_old))
         
-        # return self.a
-    
     def decision_function(self, x_pred):
         """returns the raw scores before applying the logit function
         """
@@ -84,7 +79,7 @@ class Klr(object):
             with the training x (precomputed_kernel is True), or a raw feature vector (precomputed_kernel is False)
         """
         score = self.decision_function(x_pred)
-        return invlogit(score)#, ker@self.a > 0
+        return invlogit(score)
 
     def predict(self, x_pred, prob_decision_boundary=0.5):
         probs = self.predict_proba(x_pred).flatten()
