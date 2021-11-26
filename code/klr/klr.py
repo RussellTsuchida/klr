@@ -83,7 +83,7 @@ class Klr(object):
 
     def predict(self, x_pred, prob_decision_boundary=0.5):
         probs = self.predict_proba(x_pred).flatten()
-        y_pred = [1 if prob >= prob_decision_boundary else 0 for prob in probs]
+        y_pred = probs >= prob_decision_boundary
         return np.array(y_pred).reshape(-1,1)
 
 
