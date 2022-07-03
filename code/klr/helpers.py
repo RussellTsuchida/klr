@@ -41,4 +41,5 @@ class SquaredExponential(Kernel):
         x2 = self._set_x2(x1, x2)
         return np.exp(-self.dist_sq(x1, x2)/(2*self.lengthscale**2))
 
-
+def identity(x):
+    return x
